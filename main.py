@@ -20,6 +20,35 @@ class Argentur:
                 return s
         print("Error no servicio selecionado")
 
+    def calcular_monto_total(self,fecha_desde,fecha_hasta):
+        monto_total = 0
+        for v in self.ventas:
+            if v.get_fecha_hora() > fecha_desde and v.get_fecha_hora() < fecha_hasta:
+                monto_total += v.get_monto()
+        print(f"Monto total: {monto_total}")
+
+    def ver_viajes_destino(self):
+        destino_aux = []
+        for s in self.servicio:
+            destino_aux.append(s.ver_viajes_destino_servicio())
+        destino_final = {}
+        for d in destino_aux:
+            if d not in destino_final:
+                destino_final[d] = 1
+            else:
+                destino_final[d] += 1
+        print("Destinos de los servicios:")
+        for d in destino_final:
+            print(f"{d}: {destino_final[d]}")
+
+
+
+
+    def generar_venta(self,fecha_hora,asiento,medio_pago,pasajero,monto):
+        self.ventas.append(Venta(fecha_hora,asiento,medio_pago,pasajero,monto))
+
+
+
 
 class Servicio:
     def __init__(self,codigo,unidad, fecha_partida, fecha_llegada,calidad,precio,itinerario):
@@ -45,6 +74,10 @@ class Servicio:
     def get_itinerario(self):
         self.itinerario.get_ciudad()
 
+    def ver_viajes_destino_servicio(self):
+        return self.itinerario.get_destino()
+
+
     def agregar_reserva(self, nombre, email, dni, nro_asiento):
 
         asiento = self.unidad.asiento_disponible(nro_asiento)
@@ -57,6 +90,9 @@ class Itinerario:
     def __init__(self,ciudad):
 
         self.ciudad = ciudad
+
+    def get_destino(self):
+        return self.ciudad[len(self.ciudad)-1].get_nombre()
 
     def get_ciudad(self):
         for i in self.ciudad:
@@ -81,13 +117,6 @@ class Reserva:
         self.fecha_hora = fecha_hora
         #MMMM  dijo la muda
         self.pasajero =Pasajero(nombre, email, dni, asiento)
-
-class Venta:
-    def __init__(self,fecha_hora,asiento,medio_pago,pasajero):
-        self.fecha_hora = fecha_hora
-        self.asiento = asiento
-        self.medio_pago = medio_pago
-        self.pasajero = pasajero
 
 class Pasajero:
     def __init__(self,nombre, email, dni,asiento):
@@ -124,9 +153,6 @@ class Unidad:
             if i.get_numero() == nro_asiento:
                 return i
 
-
-
-
 class Asiento:
     def __init__(self, numero, ocupado):
         self.numero = numero
@@ -138,9 +164,26 @@ class Asiento:
     def set_ocupado(self):
         self.ocupado = True
 
+class Venta:
+    def __init__(self,fecha_hora,asiento,medio_pago,pasajero,monto):
+        self.fecha_hora = fecha_hora
+        self.asiento = asiento
+        self.medio_pago = medio_pago
+        self.pasajero = pasajero
+        self.monto = monto
+    def get_monto(self):
+        return self.monto
+    def get_fecha_hora(self):
+        return self.fecha_hora
+
+
+
 class MedioPago(ABC):
     @abstractmethod
     def __init__(self):
+        pass
+    @abstractmethod
+    def pagar(self):
         pass
 
 class TajetaCredito(MedioPago):
@@ -149,16 +192,25 @@ class TajetaCredito(MedioPago):
         self.dni = dni
         self.nombre = nombre
         self.fecha_vencimiento = fecha_vencimiento
+    def pagar(self):
+        print("Pagando con tarjeta de credito")
+        pass
 
 class MercadoPago(MedioPago):
     def __init__(self,celular, email):
         self.celular = celular
         self.email = email
+    def pagar(self):
+        print("Pagando con Mercado Pago")
+        pass
 
 class Uala(MedioPago):
     def __init__(self,email, nombre_titular):
         self.email = email
         self.nombre_titular = nombre_titular
+    def pagar(self):
+        print("Pagando con Uala")
+        pass
 
 
 
@@ -171,6 +223,7 @@ class Uala(MedioPago):
 
 
 if __name__ == '__main__':
+    # Declaracion de instancias
     # Crear ciudades
     ciudad1 = Ciudad(1, "Buenos Aires", "Buenos Aires")
     ciudad2 = Ciudad(2, "Rosario", "Santa Fe")
@@ -214,6 +267,7 @@ if __name__ == '__main__':
     # Cargar los servicios
     sistema.servicio.extend([servicio1, servicio2, servicio3, servicio4, servicio5])
 
+    # Ejecucion del programa
     # Consultar los servicios disponibles
     print("=== Servicios Disponibles ===")
     sistema.get_servicio()
@@ -236,3 +290,5 @@ if __name__ == '__main__':
 
     print("Estado actualizado de los asientos: ")
     servicio_selec.get_asientos_unidad()
+
+    sistema.ver_viajes_destino()

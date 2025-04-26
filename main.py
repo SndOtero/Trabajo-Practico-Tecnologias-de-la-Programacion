@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+from datetime import date
 
 class Argentur:
     def __init__(self, sistema_activo):
@@ -45,6 +45,17 @@ class Servicio:
     def get_itinerario(self):
         self.itinerario.get_ciudad()
 
+    def agregar_reserva(self, nombre, email, dni, nro_asiento):
+
+        asiento = self.unidad.asiento_disponible(nro_asiento)
+
+        if not self.unidad.ocupar_asiento(asiento):
+            self.reservas.append(Reserva(date.today(),nombre, email, dni, asiento))
+            print(f"Reserva realizada: pasajero: {nombre}, asiento: {asiento.get_numero()}, servicio del {self.fecha_partida}")
+
+
+
+
 class Ciudad:
     def __init__(self,codigo, nombre, provincia):
         self.codigo = codigo
@@ -70,15 +81,16 @@ class Itinerario:
 
 
 class Reserva:
-    def __init__(self,fecha_hora,pasajero):
+    def __init__(self,fecha_hora,nombre, email, dni, asiento):
         self.fecha_hora = fecha_hora
-        self.pasajero =pasajero
+        #MMMM  dijo la muda
+        self.pasajero =Pasajero(nombre, email, dni, asiento)
 
 class Venta:
     def __init__(self,fecha_hora,asiento,medio_pago,pasajero):
         self.fecha_hora = fecha_hora
         self.asiento = asiento
-        self.medio_pago=medio_pago
+        self.medio_pago = medio_pago
         self.pasajero = pasajero
 
 class Pasajero:
@@ -87,6 +99,8 @@ class Pasajero:
         self.email = email
         self.dni = dni
         self.asiento = asiento
+    def get_nombre(self):
+        return self.nombre
 
 class Unidad:
     def __init__(self,patente , asientos):
@@ -97,6 +111,24 @@ class Unidad:
             if not a.get_ocupado():
                 print(a.get_numero())
 
+    def ocupar_asiento(self, asiento):
+        estaba_ocupado = True
+        if asiento.get_ocupado():
+           print("Asiento Ocupado")
+        else:
+            asiento.set_ocupado()
+            estaba_ocupado=False
+
+        return estaba_ocupado
+    def asiento_disponible(self, nro_asiento):
+
+        for i in self.asientos:
+            if i.get_numero() == nro_asiento:
+                return i
+
+
+
+
 class Asiento:
     def __init__(self, numero, ocupado):
         self.numero = numero
@@ -105,6 +137,8 @@ class Asiento:
         return self.numero
     def get_ocupado(self):
         return self.ocupado
+    def set_ocupado(self):
+        self.ocupado = True
 
 class MedioPago(ABC):
     @abstractmethod
@@ -192,4 +226,15 @@ if __name__ == '__main__':
     print("asientos disponibles:")
     servicio_selec.get_asientos_unidad()
 
+    #Datos del cliente
+    nombre = input("Nombre:\n")
+    email = input("Email:\n")
+    dni = input("Dni:\n")
 
+    #Nro Asiento seleccionado
+    nro_asiento = input("Numero de asiento:\n")
+
+    #Crear reserva
+    servicio_selec.agregar_reserva(nombre, email, dni, nro_asiento)
+
+    servicio_selec.get_asientos_unidad()

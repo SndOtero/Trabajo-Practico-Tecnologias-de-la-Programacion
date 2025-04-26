@@ -27,12 +27,14 @@ class Argentur:
                 monto_total += v.get_monto()
         print(f"Monto total: {monto_total}")
 
-    def ver_viajes_destino(self):
+    def ver_viajes_destino(self,fecha_desde,fecha_hasta):
         destino_aux = []
         for s in self.servicio:
-            destino_aux.append(s.ver_viajes_destino_servicio())
+            if s.get_fecha_partida() > fecha_desde and s.get_fecha_partida() < fecha_hasta:
+                destino_aux.append(s.ver_viajes_destino_servicio())
         destino_final = {}
         for d in destino_aux:
+
             if d not in destino_final:
                 destino_final[d] = 1
             else:
@@ -41,12 +43,30 @@ class Argentur:
         for d in destino_final:
             print(f"{d}: {destino_final[d]}")
 
+    def ver_pagos(self,fecha_desde,fecha_hasta):
+        medio_pago_aux = []
+        for v in self.ventas:
+            if v.get_fecha_hora() > fecha_desde and v.get_fecha_hora() < fecha_hasta:
+                medio_pago_aux.append(v.get_medio_pago())
 
+        medio_pago_dic = {}
+        for d in medio_pago_aux:
+            if d not in medio_pago_dic:
+                medio_pago_dic[d] = 1
+            else:
+                medio_pago_dic[d] += 1
+        print("Pagos:")
+        for d in medio_pago_dic:
+            print(f"{d}: {medio_pago_dic[d]}")
 
 
     def generar_venta(self,fecha_hora,asiento,medio_pago,pasajero,monto):
         self.ventas.append(Venta(fecha_hora,asiento,medio_pago,pasajero,monto))
 
+    def generar_informe(self,fecha_desde,fecha_hasta):
+        self.calcular_monto_total(fecha_desde,fecha_hasta)
+        self.ver_viajes_destino(fecha_desde,fecha_hasta)
+        self.ver_pagos(fecha_desde, fecha_hasta)
 
 
 
@@ -85,6 +105,7 @@ class Servicio:
         if not self.unidad.ocupar_asiento(asiento):
             self.reservas.append(Reserva(date.today(),nombre, email, dni, asiento))
             print(f"Reserva realizada: pasajero: {nombre}, asiento: {asiento.get_numero()}, servicio del {self.fecha_partida}")
+
 
 class Itinerario:
     def __init__(self,ciudad):
@@ -176,6 +197,8 @@ class Venta:
     def get_fecha_hora(self):
         return self.fecha_hora
 
+    def get_medio_pago(self):
+        return self.medio_pago.get_tipo()
 
 
 class MedioPago(ABC):
@@ -183,7 +206,7 @@ class MedioPago(ABC):
     def __init__(self):
         pass
     @abstractmethod
-    def pagar(self):
+    def get_tipo(self):
         pass
 
 class TajetaCredito(MedioPago):
@@ -192,25 +215,23 @@ class TajetaCredito(MedioPago):
         self.dni = dni
         self.nombre = nombre
         self.fecha_vencimiento = fecha_vencimiento
-    def pagar(self):
-        print("Pagando con tarjeta de credito")
-        pass
+    def get_tipo(self):
+        return "Tajeta Credito"
+
 
 class MercadoPago(MedioPago):
     def __init__(self,celular, email):
         self.celular = celular
         self.email = email
-    def pagar(self):
-        print("Pagando con Mercado Pago")
-        pass
+    def get_tipo(self):
+        return "Mercado Pago"
 
 class Uala(MedioPago):
     def __init__(self,email, nombre_titular):
         self.email = email
         self.nombre_titular = nombre_titular
-    def pagar(self):
-        print("Pagando con Uala")
-        pass
+    def get_tipo(self):
+        return "Uala Pago"
 
 
 
@@ -255,11 +276,11 @@ if __name__ == '__main__':
     unidad5 = Unidad("MNO345",vector_asientos)
 
     # Crear servicios
-    servicio1 = Servicio("serv1", unidad1, "2025-05-01 08:00", "2025-05-02 18:00", "Premium", 15000, itinerario1)
-    servicio2 = Servicio("serv2", unidad2, "2025-06-10 07:30", "2025-06-11 15:45", "Económico", 8000, itinerario2)
-    servicio3 = Servicio("serv3", unidad3, "2025-07-05 20:00", "2025-07-07 06:00", "Ejecutivo", 12000, itinerario3)
-    servicio4 = Servicio("serv4",unidad4, "2025-08-15 10:00", "2025-08-16 22:00", "Premium", 16000, itinerario4)
-    servicio5 = Servicio("serv5",unidad5, "2025-09-20 06:00", "2025-09-21 18:30", "Económico", 9000, itinerario5)
+    servicio1 = Servicio("serv1", unidad1, date(2025, 8, 4), "2025-05-02 18:00", "Premium", 15000, itinerario1)
+    servicio2 = Servicio("serv2", unidad2, date(2025, 9, 4), "2025-06-11 15:45", "Económico", 8000, itinerario2)
+    servicio3 = Servicio("serv3", unidad3, date(2025, 10, 4), "2025-07-07 06:00", "Ejecutivo", 12000, itinerario3)
+    servicio4 = Servicio("serv4",unidad4, date(2025, 11, 4), "2025-08-16 22:00", "Premium", 16000, itinerario4)
+    servicio5 = Servicio("serv5",unidad5, date(2025, 12, 4), "2025-09-21 18:30", "Económico", 9000, itinerario5)
 
     # Crear instancia del sistema Argentur
     sistema = Argentur(sistema_activo=True)
@@ -290,5 +311,39 @@ if __name__ == '__main__':
 
     print("Estado actualizado de los asientos: ")
     servicio_selec.get_asientos_unidad()
+    fecha = date(2023, 12, 31)
+    fecha_hasta = date(2026, 12, 31)
 
-    sistema.ver_viajes_destino()
+
+
+    ######################
+    #If para opciones    #
+    ######################
+
+
+
+    tarjeta = TajetaCredito("1234567890123456", "12345678", "Juan Perez", "12/27")
+    mpago = MercadoPago("1122334455", "juan@example.com")
+    uala = Uala("maria@example.com", "Maria Gomez")
+
+    # Crear asientos
+    asiento1 = Asiento("1", False)
+    asiento2 = Asiento("2", False)
+    asiento3 = Asiento("3", False)
+
+    # Crear pasajeros
+    pasajero1 = Pasajero("Juan Perez", "juan@example.com", "12345678", asiento1)
+    pasajero2 = Pasajero("Maria Gomez", "maria@example.com", "87654321", asiento2)
+    pasajero3 = Pasajero("Carlos Ruiz", "carlos@example.com", "56781234", asiento3)
+
+    # Crear sistema
+
+
+    # Generar ventas
+    sistema.generar_venta(date.today(), asiento1, tarjeta, pasajero1, 15000)
+    sistema.generar_venta(date.today(), asiento2, mpago, pasajero2, 12000)
+    sistema.generar_venta(date.today(), asiento3, uala, pasajero3, 8000)
+    sistema.generar_venta(date.today(), asiento1, tarjeta, pasajero1, 15000)
+
+
+    sistema.generar_informe(fecha,fecha_hasta)

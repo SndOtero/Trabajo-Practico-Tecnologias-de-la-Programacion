@@ -53,23 +53,11 @@ class Servicio:
             self.reservas.append(Reserva(date.today(),nombre, email, dni, asiento))
             print(f"Reserva realizada: pasajero: {nombre}, asiento: {asiento.get_numero()}, servicio del {self.fecha_partida}")
 
-
-
-
-class Ciudad:
-    def __init__(self,codigo, nombre, provincia):
-        self.codigo = codigo
-        self.nombre = nombre
-        self.provincia = provincia
-
-    def get_nombre(self):
-        return self.nombre
-
-
 class Itinerario:
     def __init__(self,ciudad):
 
-       self.ciudad = ciudad
+        self.ciudad = ciudad
+
     def get_ciudad(self):
         for i in self.ciudad:
             if i == self.ciudad[0] :
@@ -79,6 +67,14 @@ class Itinerario:
             else:
                 print(f"Ciudad de destino: {i.get_nombre()}")
 
+class Ciudad:
+    def __init__(self,codigo, nombre, provincia):
+        self.codigo = codigo
+        self.nombre = nombre
+        self.provincia = provincia
+
+    def get_nombre(self):
+        return self.nombre
 
 class Reserva:
     def __init__(self,fecha_hora,nombre, email, dni, asiento):
@@ -107,9 +103,11 @@ class Unidad:
         self.patente = patente
         self.asientos = asientos
     def get_asientos(self):
+        asientos_libres = ""
         for a in self.asientos:
             if not a.get_ocupado():
-                print(a.get_numero())
+                asientos_libres += " " + a.get_numero()
+        print(f"asientos disponibles:{asientos_libres}")
 
     def ocupar_asiento(self, asiento):
         estaba_ocupado = True
@@ -223,7 +221,6 @@ if __name__ == '__main__':
     codigo_servicio = input("seleccione su servicio:\n")
     servicio_selec = sistema.get_servicio_unico(codigo_servicio)
     print(f"Usted selecciono: {servicio_selec.get_cod_servicio()}")
-    print("asientos disponibles:")
     servicio_selec.get_asientos_unidad()
 
     #Datos del cliente
@@ -237,4 +234,5 @@ if __name__ == '__main__':
     #Crear reserva
     servicio_selec.agregar_reserva(nombre, email, dni, nro_asiento)
 
+    print("Estado actualizado de los asientos: ")
     servicio_selec.get_asientos_unidad()
